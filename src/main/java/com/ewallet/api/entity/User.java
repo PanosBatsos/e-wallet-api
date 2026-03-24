@@ -1,5 +1,6 @@
 package com.ewallet.api.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -42,6 +43,15 @@ public class User {
 
     @Column(nullable = false , name = "created_at" , updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(unique = true)
+    private String idCardNumber;
+
+    @Column(unique = true , length = 9)
+    private String taxNumber;
+
+    @Column(nullable = false)
+    private LocalDate birthDate;
 
     @PrePersist
     protected void onCreate() {
