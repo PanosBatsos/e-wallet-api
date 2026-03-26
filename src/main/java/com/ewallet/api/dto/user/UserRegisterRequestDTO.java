@@ -44,4 +44,8 @@ public class UserRegisterRequestDTO {
     @NotNull(message = "Birth date is required")
     @Past(message = "Birth date must be in the past")
     private LocalDate birthDate;
+
+    @NotNull(message = "ISO currency is required")
+    @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be 3 uppercase letters")
+    private String currency;
 }
