@@ -11,18 +11,26 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
+    /**
+     * Defines the encoder bean 
+     * @return BCryptPasswordEncoder instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configures security filter chain
+     * Currently configured to allow all requests for dev purposes
+     */
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() 
+            .csrf(csrf -> csrf.disable()) // Disabling CSRF for stateless API development
+            .authorizeHttpRequests(auth -> auth 
+                .anyRequest().permitAll() // Permitting all requests during the initial dev phase
             );
         return http.build();
     }
