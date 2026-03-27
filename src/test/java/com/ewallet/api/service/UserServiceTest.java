@@ -1,0 +1,144 @@
+package com.ewallet.api.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.ewallet.api.dto.user.UserRegisterRequestDTO;
+import com.ewallet.api.dto.user.UserResponseDTO;
+import com.ewallet.api.dto.user.mapper.UserMapper;
+import com.ewallet.api.entity.User;
+import com.ewallet.api.repository.UserRepository;
+import com.ewallet.api.repository.WalletRepository;
+
+@ExtendWith(MockitoExtension.class)
+public class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private WalletRepository walletRepository;
+
+    @InjectMocks
+    private UserService userService;
+
+    private UserRegisterRequestDTO dto;
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        dto = new UserRegisterRequestDTO();
+        dto.setEmail("test@test.com");
+        dto.setPassword("12345");
+        dto.setCurrency("USD");
+
+        user = new User();
+        user.setEmail("test@test.com");
+    }
+
+    @Test
+    void registerUser_Success() {
+        // Tells the mock repository to return an empty optional (simulating that the
+        // email is not taken)
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        // Instruct the mock mapper to return our predefined user entity when it
+        // receives the dto
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        // Simulates the password hashing
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
+
+        // Simulates the database save operation returning the same user entity
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        // Instructs the mapper to return a new ResponseDTO
+        when(userMapper.toDTO(any(User.class))).thenReturn(new UserResponseDTO());
+
+        // We trigger the service and capture the response
+        UserResponseDTO result = userService.registerUser(dto);
+
+        // Ensures that the service did not return null
+        assertNotNull(result, "The response should not be null on successful registration");
+
+        // Verifies tha that the user's repo save method was called exactly once
+        verify(userRepository, times(1)).save(any(User.class));
+
+        // Confirms that the password encoder was used
+        verify(passwordEncoder).encode(anyString());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when user email already exists")
+    void registerUser_EmailAlreadyExists_ThrowsException() {
+        // We return an optional containing a user entity
+        when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+
+        // We expect a RuntimeException(for now) to be thrown
+        // This checks if the service correctly stops execution and throws the error
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.registerUser(dto);
+        });
+
+        // Verify the error message matches what we wrote in the Service
+        assertEquals("This user already exist", exception.getMessage());
+
+        // Ensuring that the repo's save method was never called to don't
+        // save the duplicate user
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should ensure a wallet is created and saved when a user registers")
+    void registerUser_WalletCreation_Succesfull() {
+
+        // Simulate that the email is available
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        // Mock the mapping and encoding using any() for flexibility
+        when(userMapper.toUser(any())).thenReturn(user);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
+        
+        // Mock the persistence and final DTO mapping
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toDTO(any(User.class))).thenReturn(new UserResponseDTO());
+
+        // Execute the registration
+        userService.registerUser(dto);
+
+        
+        // Use an ArgumentCaptor to intercept the User object passed to the save method
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+
+        // Ensure that the entity has a wallet attached
+        assertNotNull(savedUser.getWallet(), "The user should have a wallet attached due to cascade");
+    }
+}
