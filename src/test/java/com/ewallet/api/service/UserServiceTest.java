@@ -1,8 +1,11 @@
 package com.ewallet.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,6 +13,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -83,5 +87,25 @@ public class UserServiceTest {
         
         // Confirms that the password encoder was used
         verify(passwordEncoder).encode(anyString());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when user email already exists")
+    void registerUser_EmailAlreadyExists_ThrowsException () {
+        // We return an optional containing a user entity
+        when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+
+        // We expect a RuntimeException(for now) to be thrown
+        // This checks if the service correctly stops execution and throws the error 
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                userService.registerUser(dto);
+            });
+        
+        // Verify the error message matches what we wrote in the Service
+        assertEquals("This user already exist" , exception.getMessage());
+        
+        // Ensuring that the repo's save method was never called to don't
+        // save the duplicate user
+        verify(userRepository, never()).save(any(User.class));
     }
 }
