@@ -25,6 +25,13 @@ public class UserController {
     
     private final UserService userService;
 
+    /**
+     * Receives a validated dto triggers the business logic in the service
+     * and returns the created user data
+     * @param dto The validated user registration dto
+     * @return A responseEntity containing the ResponseDTO and the HTTP status
+     */
+
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account and an associated wallet")
     public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRegisterRequestDTO dto) {
