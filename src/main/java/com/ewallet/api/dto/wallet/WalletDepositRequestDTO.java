@@ -32,4 +32,5 @@ public class WalletDepositRequestDTO {
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be 3 uppercase letters")
     private String currency;
 
+    private String description;
 }
