@@ -8,9 +8,9 @@ import java.math.BigDecimal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ewallet.api.dto.user.UserMapper;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
 import com.ewallet.api.dto.user.UserResponseDTO;
-import com.ewallet.api.dto.user.mapper.UserMapper;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
 import com.ewallet.api.repository.UserRepository;

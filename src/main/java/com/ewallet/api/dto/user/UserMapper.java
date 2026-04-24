@@ -1,9 +1,7 @@
-package com.ewallet.api.dto.user.mapper;
+package com.ewallet.api.dto.user;
 
 import org.springframework.stereotype.Component;
 
-import com.ewallet.api.dto.user.UserRegisterRequestDTO;
-import com.ewallet.api.dto.user.UserResponseDTO;
 import com.ewallet.api.entity.User;
 
 @Component

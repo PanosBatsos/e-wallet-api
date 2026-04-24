@@ -40,6 +40,11 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;
     
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
