@@ -36,13 +36,13 @@ public class WalletService {
 
     @Transactional
     public WalletDepositResponseDTO deposit(WalletDepositRequestDTO dto) {
-        // Retrive the user from the database
+        // Retrieve the user from the database
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));   
 
         Wallet wallet = user.getWallet();
         
-        // Ensures currency compability
+        // Ensures currency compatibility
         if (!dto.getCurrency().equals(wallet.getCurrency())) {
             throw new RuntimeException("Mismatch in currency");
         }
@@ -51,7 +51,8 @@ public class WalletService {
         wallet.setBalance(wallet.getBalance().add(dto.getAmount()));
 
 
-        
+        // Record the transaction for the audit trail.
+        // If this operation fails the @Transactional will roll back the balance update.
         transactionService.recordTransaction(wallet, 
             TransactionType.DEPOSIT,
              dto.getAmount(),
