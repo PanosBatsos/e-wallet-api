@@ -4,10 +4,12 @@ import com.ewallet.api.dto.error.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,6 +35,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUserConflict(UserAlreadyExistsException ex,
                                                        HttpServletRequest request) {
         return responseBuilder(ex.getMessage() , HttpStatus.CONFLICT , request);
+    }
+
+
+    // Handles errors triggered by @Valid
+    // Collects all field errors and returns a 400 Bad Request status
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationErrors(MethodArgumentNotValidException ex,
+                                                           HttpServletRequest request) {
+        String errors = ex.getBindingResult().getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " +error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        return  responseBuilder("Validation failed: " + errors,
+                HttpStatus.BAD_REQUEST,
+                request);
     }
 
     // Helper method to build a response entity containing an ApiError.
