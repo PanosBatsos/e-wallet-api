@@ -4,6 +4,8 @@ package com.ewallet.api.service;
 
 import java.time.LocalDateTime;
 
+import com.ewallet.api.exception.CurrencyMismatchException;
+import com.ewallet.api.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
@@ -31,20 +33,21 @@ public class WalletService {
      * persist the updated wallet balance to the database upon successful completion.
      * @param dto The deposit request payload
      * @return WalletDepositRequestDTO
-     * @throws RuntimeException if the user is not found OR if there is a currency mismatch.
+     * @throws ResourceNotFoundException if the user is not found.
+     * @throws CurrencyMismatchException  if there is a currency mismatch.
      */
 
     @Transactional
     public WalletDepositResponseDTO deposit(WalletDepositRequestDTO dto) {
         // Retrieve the user from the database
         User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));   
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Wallet wallet = user.getWallet();
         
         // Ensures currency compatibility
         if (!dto.getCurrency().equals(wallet.getCurrency())) {
-            throw new RuntimeException("Mismatch in currency");
+            throw new CurrencyMismatchException("Mismatch in currency");
         }
 
         // Update the balance
