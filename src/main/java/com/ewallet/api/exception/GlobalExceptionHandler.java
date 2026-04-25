@@ -19,6 +19,13 @@ public class GlobalExceptionHandler {
         return responseBuilder(ex.getMessage() , HttpStatus.NOT_FOUND , request);
     }
 
+    // Handles cases where a transaction currency does not match the wallet currency.
+    // Returns a 400 Bad Request status.
+    @ExceptionHandler(CurrencyMismatchException.class)
+    public ResponseEntity<ApiError> handleCurrencyMismatch(CurrencyMismatchException ex,
+                                                           HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.BAD_REQUEST , request);
+    }
 
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
