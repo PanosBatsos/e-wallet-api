@@ -1,5 +1,6 @@
 package com.ewallet.api.service;
 
+import com.ewallet.api.exception.UserAlreadyExistsException;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
@@ -31,14 +32,14 @@ public class UserService {
      * @param dto The data transfer object containing reg details(firstname , lastname , email 
      * , password , currency , dob , id card's number , taxnumber)
      * @return UserResponseDTO 
-     * @throws RuntimeException (for now) if the provided email is already registered in the db 
+     * @throws UserAlreadyExistsException if the provided email is already registered in the db
      */
 
     @Transactional // Ensures that the user and wallet creation happen as a single atomic operation
     public UserResponseDTO registerUser(UserRegisterRequestDTO dto){
         // Check if the email is already in use
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("This user already exist");
+            throw new UserAlreadyExistsException("This user already exist");
         }
 
         // Mapping and encoding the password
