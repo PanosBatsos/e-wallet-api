@@ -53,6 +53,15 @@ public class GlobalExceptionHandler {
                 request);
     }
 
+    // Generic exception handler for all other uncaught exceptions
+    // During development errors currently handled here might be assigned to
+    // their own specific handlers as the application grows.
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleOtherExceptions(Exception ex,
+                                                          HttpServletRequest request) {
+        return responseBuilder("An unexpected error occurred" , HttpStatus.INTERNAL_SERVER_ERROR , request);
+    }
+
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
                                                      HttpServletRequest request) {
