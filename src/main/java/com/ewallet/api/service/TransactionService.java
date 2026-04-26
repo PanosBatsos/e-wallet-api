@@ -3,6 +3,7 @@ package com.ewallet.api.service;
 import java.math.BigDecimal;
 
 
+import com.ewallet.api.dto.kafka.TransactionEvent;
 import com.ewallet.api.service.kafka.TransactionProducer;
 import org.springframework.stereotype.Service;
 
@@ -36,19 +37,7 @@ public class TransactionService {
             transaction.setStatus(TransactionStatus.SUCCESS); // (Sync for now) async logic to be added in the future
             Transaction savedTransaction = transactionRepository.save(transaction);
 
-            // In the future a JSON object will be sent to Kafka
-            // Right now a String is going to be sent only to verify the connection
-            // and the end-to-end integration with the Dockerized Kafka broker
-            String eventMessage = String.format(
-                    "Event %s | TransactionID: %d | WalletID: %d | Amount: %s |Currency: %s",
-                    transactionType,
-                    savedTransaction.getId(),
-                    wallet.getId(),
-                    amount,
-                    wallet.getCurrency()
-            );
 
-            transactionProducer.sendTransactionEvent(eventMessage);
 
             return savedTransaction;
         }
