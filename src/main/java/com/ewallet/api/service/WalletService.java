@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import com.ewallet.api.exception.CurrencyMismatchException;
 import com.ewallet.api.exception.ResourceNotFoundException;
+import com.ewallet.api.service.kafka.TransactionProducer;
 import org.springframework.stereotype.Service;
 
 import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
@@ -29,7 +30,7 @@ public class WalletService {
     /**
      * Processes a deposit request for a specific user
      * Validates user existence and ensures currency compability.
-     * This method relies on Transactional annotation to automatically 
+     * This method relies on Transactional annotation to automatically
      * persist the updated wallet balance to the database upon successful completion.
      * @param dto The deposit request payload
      * @return WalletDepositRequestDTO
@@ -44,7 +45,7 @@ public class WalletService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Wallet wallet = user.getWallet();
-        
+
         // Ensures currency compatibility
         if (!dto.getCurrency().equals(wallet.getCurrency())) {
             throw new CurrencyMismatchException("Mismatch in currency");
@@ -56,7 +57,7 @@ public class WalletService {
 
         // Record the transaction for the audit trail.
         // If this operation fails the @Transactional will roll back the balance update.
-        transactionService.recordTransaction(wallet, 
+        transactionService.recordTransaction(wallet,
             TransactionType.DEPOSIT,
              dto.getAmount(),
               dto.getDescription());
