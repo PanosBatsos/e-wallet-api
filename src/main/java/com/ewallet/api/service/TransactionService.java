@@ -1,6 +1,7 @@
 package com.ewallet.api.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 import com.ewallet.api.dto.kafka.TransactionEvent;
@@ -37,8 +38,18 @@ public class TransactionService {
             transaction.setStatus(TransactionStatus.SUCCESS); // (Sync for now) async logic to be added in the future
             Transaction savedTransaction = transactionRepository.save(transaction);
 
+            TransactionEvent event = TransactionEvent.builder()
+                    .transactionId(savedTransaction.getId())
+                    .type(savedTransaction.getType().toString())
+                    .sourceWalletId(null)
+                    .destinationWalletId(wallet.getId())
+                    .amount(amount)
+                    .currency(wallet.getCurrency())
+                    .description(description)
+                    .timestamp(LocalDateTime.now())
+                    .build();
 
-
+            transactionProducer.sendTransactionEvent(event);
             return savedTransaction;
         }
         // Other transaction cases will be added here in the future
