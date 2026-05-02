@@ -1,5 +1,7 @@
 package com.ewallet.api.controller;
 
+import com.ewallet.api.dto.wallet.WalletTransferRequestDTO;
+import com.ewallet.api.dto.wallet.WalletTransferResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,5 +36,6 @@ public class WalletController {
         WalletDepositResponseDTO response = walletService.deposit(dto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
 
 }
