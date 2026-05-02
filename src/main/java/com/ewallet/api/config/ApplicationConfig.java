@@ -43,7 +43,7 @@ public class ApplicationConfig {
     }
 
 
-    // Defines the password hashing algorithm BCrypt is used for secure one-way encryption
+    // Defines the password hashing algorithm. BCrypt is used for secure one-way encryption
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
