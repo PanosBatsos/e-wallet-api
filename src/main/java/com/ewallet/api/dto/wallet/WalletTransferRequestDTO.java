@@ -1,16 +1,20 @@
 package com.ewallet.api.dto.wallet;
 
-import jakarta.validation.constraints.*;
-import lombok.Data;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-@Data
 public class WalletTransferRequestDTO {
+    // Tmp field until JWT security is implemented
+    @NotNull(message = "User's id is required")
+    private Long sourceUserId;
 
-    @NotBlank(message = "Receiver email is required")
-    @Email(message = "Invalid email format")
-    private String receiverEmail;
+    // The id of the other user
+    @NotNull(message = "Destination user's id is required")
+    private Long destinationUserId;
 
     // The amount of money to be transferred
     @NotNull(message = "Amount is required")

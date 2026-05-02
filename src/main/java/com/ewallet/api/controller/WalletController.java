@@ -18,8 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import java.security.Principal;
-
 @RestController
 @RequestMapping("/api/v0/wallets")
 @RequiredArgsConstructor
@@ -34,18 +32,10 @@ public class WalletController {
      */
     @PostMapping("/deposit")
     @Operation(summary = "Deposit into a wallet" , description = "Deposits an amount to a user's wallet")
-    public ResponseEntity<WalletDepositResponseDTO> deposit(@Valid @RequestBody WalletDepositRequestDTO dto,
-                                                            Principal principal){
-        String userEmail = principal.getName();
-        WalletDepositResponseDTO response = walletService.deposit(dto , userEmail);
+    public ResponseEntity<WalletDepositResponseDTO> deposit(@Valid @RequestBody WalletDepositRequestDTO dto){
+        WalletDepositResponseDTO response = walletService.deposit(dto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PostMapping("/transfer")
-    public ResponseEntity<WalletTransferResponseDTO> transfer(@Valid @RequestBody WalletTransferRequestDTO dto,
-                                                              Principal principal) {
-        String userEmail = principal.getName();
-        WalletTransferResponseDTO response = walletService.transfer(dto , userEmail);
-        return new ResponseEntity<>(response , HttpStatus.OK);
-    }
+
 }
