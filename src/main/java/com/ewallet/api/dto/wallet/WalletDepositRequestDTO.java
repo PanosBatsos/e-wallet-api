@@ -23,10 +23,6 @@ public class WalletDepositRequestDTO {
     @Min(value = 1 , message = "The minimum amount is 1")
     private BigDecimal amount;
 
-    // The id of the user whose wallet will be cretided
-    // Temp field until JWT security is implemented
-    @NotNull(message = "User's id is required")
-    private Long userId;
 
     @NotNull(message = "ISO currency is required")
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be 3 uppercase letters")

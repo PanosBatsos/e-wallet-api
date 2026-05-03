@@ -39,10 +39,10 @@ public class WalletService {
      */
 
     @Transactional
-    public WalletDepositResponseDTO deposit(WalletDepositRequestDTO dto) {
-        // Retrieve the user from the database
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public WalletDepositResponseDTO deposit(WalletDepositRequestDTO dto , String userEmail) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User does not exist"));
 
         Wallet wallet = user.getWallet();
 
