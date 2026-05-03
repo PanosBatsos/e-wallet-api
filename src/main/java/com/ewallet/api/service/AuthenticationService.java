@@ -1,15 +1,18 @@
 package com.ewallet.api.service;
 
 import com.ewallet.api.dto.user.AuthenticationResponse;
+import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
+import com.ewallet.api.exception.ResourceNotFoundException;
 import com.ewallet.api.exception.UserAlreadyExistsException;
 import com.ewallet.api.repository.UserRepository;
 import com.ewallet.api.security.JwtService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +72,34 @@ public class AuthenticationService {
 
         // Persist the user the wallet is saved automatically due to CascadeType.ALL.
         userRepository.save(user);
+
+        String jwtToken = jwtService.generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
+    }
+
+
+    /**
+     * Authenticates a user based on email and password and returns a new JWT token
+     * @param userLoginRequestDTO The dto containing login credentials
+     * @return AuthenticationResponse containing the JWT token for the session
+     */
+    public AuthenticationResponse login(UserLoginRequestDTO userLoginRequestDTO) {
+
+        // Authenticate the user credentials using spring security's AuthenticationManager
+        // This process automatically hashes the provided password and compares it with the database
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userLoginRequestDTO.getEmail(),
+                        userLoginRequestDTO.getPassword()
+                )
+        );
+
+        // Fetch the authenticated user from the database
+        User user = userRepository.findByEmail(userLoginRequestDTO.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found after authentication"));
 
         String jwtToken = jwtService.generateToken(user);
 
