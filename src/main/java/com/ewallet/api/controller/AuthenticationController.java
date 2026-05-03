@@ -1,7 +1,6 @@
 package com.ewallet.api.controller;
 
 import com.ewallet.api.dto.user.AuthenticationResponse;
-import com.ewallet.api.dto.user.RefreshTokenRequestDTO;
 import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
 import com.ewallet.api.service.AuthenticationService;
@@ -32,9 +31,4 @@ public class AuthenticationController {
         return new ResponseEntity<>(authenticationResponse , HttpStatus.OK);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequestDTO dto) {
-       AuthenticationResponse authenticationResponse = authenticationService.refreshToken(dto);
-       return new ResponseEntity<>(authenticationResponse , HttpStatus.OK);
-    }
 }
