@@ -22,7 +22,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
 
-    // Επαγγελματική πρακτική: Συγκεντρώνουμε τα "ανοιχτά" URL σε έναν πίνακα
+
     private static final String[] WHITE_LIST_URL = {
             "/api/v0/auth/**",
             "/v3/api-docs/**",
@@ -33,7 +33,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Πιο ρητό declaration
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(WHITE_LIST_URL).permitAll()
                         .anyRequest().authenticated()
@@ -42,7 +42,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider)
-                // Εδώ προσθέτουμε τον "πορτιέρη" μας πριν τον κλασικό έλεγχο
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
