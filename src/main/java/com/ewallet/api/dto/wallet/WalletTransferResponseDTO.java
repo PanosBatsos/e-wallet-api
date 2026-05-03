@@ -8,7 +8,7 @@ public class WalletTransferResponseDTO {
     private BigDecimal newBalance;
     private String currency;
     private LocalDateTime timestamp;
-    private String message;
-    private Long sourceUserId;
-    private Long destinationUserId;
+    private String description;
+    private String senderEmail;
+    private String receiverEmail;
 }
