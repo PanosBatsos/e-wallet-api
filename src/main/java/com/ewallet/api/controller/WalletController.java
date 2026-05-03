@@ -41,5 +41,11 @@ public class WalletController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
+    @PostMapping("/transfer")
+    public ResponseEntity<WalletTransferResponseDTO> transfer(@Valid @RequestBody WalletTransferRequestDTO dto,
+                                                              Principal principal) {
+        String userEmail = principal.getName();
+        WalletTransferResponseDTO response = walletService.transfer(dto , userEmail);
+        return new ResponseEntity<>(response , HttpStatus.OK);
+    }
 }
