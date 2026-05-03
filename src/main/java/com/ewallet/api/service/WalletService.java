@@ -2,16 +2,11 @@ package com.ewallet.api.service;
 
 
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.ewallet.api.dto.wallet.WalletTransferRequestDTO;
-import com.ewallet.api.dto.wallet.WalletTransferResponseDTO;
 import com.ewallet.api.exception.CurrencyMismatchException;
 import com.ewallet.api.exception.ResourceNotFoundException;
-import com.ewallet.api.repository.WalletRepository;
 import com.ewallet.api.service.kafka.TransactionProducer;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
@@ -31,8 +26,7 @@ public class WalletService {
     
     private final UserRepository userRepository;
     private final TransactionService transactionService;
-    private final WalletRepository walletRepository;
-
+    
     /**
      * Processes a deposit request for a specific user
      * Validates user existence and ensures currency compability.
@@ -50,8 +44,7 @@ public class WalletService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User does not exist"));
 
-        Wallet wallet = walletRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
+        Wallet wallet = user.getWallet();
 
         // Ensures currency compatibility
         if (!dto.getCurrency().equals(wallet.getCurrency())) {
@@ -78,57 +71,5 @@ public class WalletService {
             .newBalance(wallet.getBalance())
             .timestamp(LocalDateTime.now())
             .build();
-    }
-
-
-    /**
-     * Processes a fund transfer between two users' wallets
-     * Validates user existence, sufficient funds and currency compatibility
-     *
-     * There is no transaction recording for now
-     *
-     * @param dto The transfer request payload
-     * @param senderEmail The email of the authenticated user initiating the transfer
-     * @return WalletTransferResponseDTO containing the transfer details
-     */
-
-
-    @Transactional
-    public WalletTransferResponseDTO transfer(WalletTransferRequestDTO dto , String senderEmail) {
-
-        Wallet senderWallet = walletRepository.findByUserEmail(senderEmail).
-                orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
-        Wallet receiverWallet = walletRepository.findByUserEmail(dto.getReceiverEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("This user does not exist"));
-
-        BigDecimal senderBalance = senderWallet.getBalance();
-        // Check for insufficient balance
-        if (senderBalance.compareTo(dto.getAmount()) < 0) {
-            // InsufficientBalanceException will be added in the future
-            throw new RuntimeException("Insufficient funds for this transfer");
-        }
-
-
-
-        // Check for currency mismatch
-        if (!senderWallet.getCurrency().equals(receiverWallet.getCurrency())) {
-            throw new CurrencyMismatchException("Cannot transfer between different currencies");
-        }
-
-        // Sync for now
-        senderWallet.setBalance(senderWallet.getBalance().subtract(dto.getAmount()));
-        receiverWallet.setBalance(receiverWallet.getBalance().add(dto.getAmount()));
-
-        // Transaction logic to be added in the future
-
-        return  WalletTransferResponseDTO.builder()
-                .senderEmail(senderEmail)
-                .receiverEmail(dto.getReceiverEmail())
-                .description(dto.getDescription())
-                .amountTransferred(dto.getAmount())
-                .timestamp(LocalDateTime.now())
-                .currency(dto.getCurrency())
-                .build();
-                
     }
 }
