@@ -23,11 +23,14 @@ public class TokenCleanupService {
 
         Long totalDeleted = 0L;
         int deletedInThisBatch;
+        final int MAX_CIRCLES = 100;
+        int currentCircle = 0;
 
         do {
             deletedInThisBatch = refreshTokenRepository.deleteExpiredTokensInBatches(Instant.now(), BATCH_SIZE);
             totalDeleted = totalDeleted + deletedInThisBatch;
-        } while (deletedInThisBatch == BATCH_SIZE);
+            currentCircle++;
+        } while (deletedInThisBatch == BATCH_SIZE && currentCircle < MAX_CIRCLES);
 
         if (totalDeleted > 0) {
             log.info("Deleted {} tokens" , totalDeleted );
