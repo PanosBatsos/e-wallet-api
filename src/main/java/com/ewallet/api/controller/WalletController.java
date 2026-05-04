@@ -1,5 +1,7 @@
 package com.ewallet.api.controller;
 
+import com.ewallet.api.dto.wallet.WalletTransferRequestDTO;
+import com.ewallet.api.dto.wallet.WalletTransferResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/v0/wallets")
 @RequiredArgsConstructor
@@ -30,9 +34,18 @@ public class WalletController {
      */
     @PostMapping("/deposit")
     @Operation(summary = "Deposit into a wallet" , description = "Deposits an amount to a user's wallet")
-    public ResponseEntity<WalletDepositResponseDTO> deposit(@Valid @RequestBody WalletDepositRequestDTO dto){
-        WalletDepositResponseDTO response = walletService.deposit(dto);
+    public ResponseEntity<WalletDepositResponseDTO> deposit(@Valid @RequestBody WalletDepositRequestDTO dto,
+                                                            Principal principal){
+        String userEmail = principal.getName();
+        WalletDepositResponseDTO response = walletService.deposit(dto , userEmail);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PostMapping("/transfer")
+    public ResponseEntity<WalletTransferResponseDTO> transfer(@Valid @RequestBody WalletTransferRequestDTO dto,
+                                                              Principal principal) {
+        String userEmail = principal.getName();
+        WalletTransferResponseDTO response = walletService.transfer(dto , userEmail);
+        return new ResponseEntity<>(response , HttpStatus.OK);
+    }
 }
