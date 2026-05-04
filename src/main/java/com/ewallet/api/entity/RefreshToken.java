@@ -7,7 +7,10 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "refresh_tokens")
+@Table(name = "refresh_tokens" , indexes = {
+        @Index(name = "idx_refresh_token_expiry",
+        columnList = "expiryDate")
+})
 @Getter
 @Setter
 @NoArgsConstructor
