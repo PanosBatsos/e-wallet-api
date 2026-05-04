@@ -28,5 +28,11 @@ public class TokenCleanupService {
             deletedInThisBatch = refreshTokenRepository.deleteExpiredTokensInBatches(Instant.now(), BATCH_SIZE);
             totalDeleted = totalDeleted + deletedInThisBatch;
         } while (deletedInThisBatch == BATCH_SIZE);
+
+        if (totalDeleted > 0) {
+            log.info("Deleted {} tokens" , totalDeleted );
+        } else {
+            log.info("There are not expired tokens ");
+        }
     }
 }
