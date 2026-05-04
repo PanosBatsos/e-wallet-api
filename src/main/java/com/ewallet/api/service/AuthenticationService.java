@@ -1,8 +1,10 @@
 package com.ewallet.api.service;
 
 import com.ewallet.api.dto.user.AuthenticationResponse;
+import com.ewallet.api.dto.user.RefreshTokenRequestDTO;
 import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
+import com.ewallet.api.entity.RefreshToken;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
 import com.ewallet.api.exception.ResourceNotFoundException;
@@ -27,7 +29,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final WalletRepository walletRepository;
-
+    private final RefreshTokenService refreshTokenService;
     /**
      * Registers a new user and automatically provisions an initial wallet for them
      * @param userRegisterRequestDTO The DTO containing registration details
@@ -73,14 +75,15 @@ public class AuthenticationService {
 
 
 
-
-
         walletRepository.save(wallet);
 
         String jwtToken = jwtService.generateToken(user);
 
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
     }
 
@@ -105,10 +108,39 @@ public class AuthenticationService {
         User user = userRepository.findByEmail(userLoginRequestDTO.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found after authentication"));
 
+        // Delete the previous token
+        refreshTokenService.deleteByUserId(user.getEmail());
+
         String jwtToken = jwtService.generateToken(user);
+
+        // Create a new one
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
 
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
+    }
+
+
+    // If the token is verified deletes the previous, creates a new one and
+    // gives access token
+    public AuthenticationResponse refreshToken(RefreshTokenRequestDTO requestDTO) {
+        return refreshTokenService.findByToken(requestDTO.getRefreshToken())
+                .map(refreshTokenService::verifyExpiration)
+                .map(refreshToken -> {
+                    User user = refreshToken.getUser();
+
+                    refreshTokenService.deleteByUserId(user.getEmail());
+
+                    String newAccessToken = jwtService.generateToken(user);
+                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+
+                    return AuthenticationResponse.builder()
+                            .token(newAccessToken)
+                            .refreshToken(newRefreshToken.getToken())
+                            .build();
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh Token not found"));
     }
 }
