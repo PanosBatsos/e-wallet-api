@@ -1,5 +1,6 @@
 package com.ewallet.api.service;
 
+import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
 import com.ewallet.api.entity.RefreshToken;
 import com.ewallet.api.exception.UserAlreadyExistsException;
@@ -12,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -127,4 +130,41 @@ public class AuthenticationServiceTest {
         verify(userRepository , never()).save(any());
     }
 
+    @Test
+    void authenticate_ShouldThrowException_WhenCredentialsAreInvalid() {
+
+        UserLoginRequestDTO loginDto = new UserLoginRequestDTO();
+        loginDto.setEmail("wrong@test.com");
+        loginDto.setPassword("wrongPassword");
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        assertThrows(BadCredentialsException.class, () -> {
+            authenticationService.login(loginDto);
+        });
+
+        verify(jwtService, never()).generateToken(any());
+        verify(refreshTokenService, never()).createRefreshToken(anyString());
+    }
+
+
+    @Test
+    void authenticate_ShouldThrowException_WhenPasswordIsIncorrect() {
+
+        UserLoginRequestDTO loginDto = new UserLoginRequestDTO();
+        loginDto.setEmail("user@test.com");
+        loginDto.setPassword("wrong-password");
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Invalid password"));
+
+        // Act & Assert
+        assertThrows(BadCredentialsException.class, () -> {
+            authenticationService.login(loginDto);
+        });
+
+        verify(jwtService, never()).generateToken(any());
+        verify(refreshTokenService, never()).createRefreshToken(anyString());
+    }
 }
