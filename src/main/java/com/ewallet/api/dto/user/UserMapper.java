@@ -1,5 +1,6 @@
 package com.ewallet.api.dto.user;
 
+import com.ewallet.api.entity.Wallet;
 import org.springframework.stereotype.Component;
 
 import com.ewallet.api.entity.User;
@@ -20,8 +21,8 @@ public class UserMapper {
     }
 
 
-    public UserResponseDTO toDTO (User user) {
-        if (user.getWallet() == null) {
+    public UserResponseDTO toDTO (User user , Wallet wallet) {
+        if (wallet == null) {
             throw new RuntimeException("User has not been mapped to a wallet");
         }
 
@@ -30,7 +31,7 @@ public class UserMapper {
             .firstName(user.getFirstName())
             .id(user.getId())
             .birthDate(user.getBirthDate())
-            .walletId(user.getWallet().getId())
+            .walletId(wallet.getId())
             .lastName(user.getLastName())
             .build();
     }
