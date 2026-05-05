@@ -1,12 +1,15 @@
 package com.ewallet.api.service;
 
+import com.ewallet.api.dto.user.AuthenticationResponse;
 import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
 import com.ewallet.api.entity.RefreshToken;
+import com.ewallet.api.entity.User;
 import com.ewallet.api.exception.UserAlreadyExistsException;
 import com.ewallet.api.repository.UserRepository;
 import com.ewallet.api.repository.WalletRepository;
 import com.ewallet.api.security.JwtService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +20,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
@@ -159,7 +165,7 @@ public class AuthenticationServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid password"));
 
-        // Act & Assert
+
         assertThrows(BadCredentialsException.class, () -> {
             authenticationService.login(loginDto);
         });
@@ -167,4 +173,34 @@ public class AuthenticationServiceTest {
         verify(jwtService, never()).generateToken(any());
         verify(refreshTokenService, never()).createRefreshToken(anyString());
     }
+
+    @Test
+    void authenticate_ShouldReturnTokens_WhenCredentialsAreValid() {
+
+        UserLoginRequestDTO loginDto = new UserLoginRequestDTO();
+        loginDto.setEmail("user@test.com");
+        loginDto.setPassword("correctPassword");
+
+        User mockUser = new User();
+        mockUser.setEmail("user@test.com");
+        mockUser.setFirstName("Panos");
+
+        when(authenticationManager.authenticate(any())).thenReturn(null);
+
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(mockUser));
+
+        when(jwtService.generateToken(mockUser)).thenReturn("real-jwt-token");
+
+        RefreshToken mockRefreshToken = new RefreshToken();
+
+        mockRefreshToken.setToken("real-refresh-token");
+        when(refreshTokenService.createRefreshToken("user@test.com")).thenReturn(mockRefreshToken);
+
+        AuthenticationResponse authenticationResponse = authenticationService.login(loginDto);
+        Assertions.assertEquals("real-jwt-token" , authenticationResponse.getToken());
+        Assertions.assertEquals("real-refresh-token" , authenticationResponse.getRefreshToken());
+
+    }
+
+
 }
