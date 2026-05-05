@@ -21,7 +21,7 @@ public class TokenCleanupService {
     public void cleanExpiredTokens() {
         log.info("Cleanup of expired refresh tokens begins");
 
-        Long totalDeleted = 0L;
+        int totalDeleted = 0;
         int deletedInThisBatch;
         final int MAX_CIRCLES = 100;
         int currentCircle = 0;
