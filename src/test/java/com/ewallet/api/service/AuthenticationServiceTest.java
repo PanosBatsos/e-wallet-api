@@ -6,12 +6,10 @@ import com.ewallet.api.exception.UserAlreadyExistsException;
 import com.ewallet.api.repository.UserRepository;
 import com.ewallet.api.repository.WalletRepository;
 import com.ewallet.api.security.JwtService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,4 +86,45 @@ public class AuthenticationServiceTest {
 
         verify(userRepository, times(1)).save(any());
     }
+
+    @Test
+    void register_ShouldThrowException_WhenTaxNumExists() {
+        UserRegisterRequestDTO dto = new UserRegisterRequestDTO();
+        dto.setEmail("newuser@test.com");
+        dto.setFirstName("Panos");
+        dto.setLastName("Batsos");
+        dto.setPassword("Secret123!");
+        dto.setIdCardNumber("AN123456");
+        dto.setTaxNumber("123456789");
+
+        when(userRepository.existsByEmail("newuser@test.com")).thenReturn(false);
+        when(userRepository.existsByTaxNumber("123456789")).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class , () -> {
+            authenticationService.register(dto);
+        });
+
+        verify(userRepository , never()).save(any());
+    }
+
+    @Test
+    void register_ShouldThrowException_WhenIdCardNumExists() {
+        UserRegisterRequestDTO dto = new UserRegisterRequestDTO();
+        dto.setEmail("newuser@test.com");
+        dto.setFirstName("Panos");
+        dto.setLastName("Batsos");
+        dto.setPassword("Secret123!");
+        dto.setIdCardNumber("AN123456");
+        dto.setTaxNumber("123456789");
+
+        when(userRepository.existsByEmail("newuser@test.com")).thenReturn(false);
+        when(userRepository.existsByIdCardNumber("AN123456")).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class , () -> {
+            authenticationService.register(dto);
+        });
+
+        verify(userRepository , never()).save(any());
+    }
+
 }
