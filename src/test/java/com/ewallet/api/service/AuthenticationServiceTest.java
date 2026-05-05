@@ -1,6 +1,7 @@
 package com.ewallet.api.service;
 
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
+import com.ewallet.api.entity.RefreshToken;
 import com.ewallet.api.exception.UserAlreadyExistsException;
 import com.ewallet.api.repository.UserRepository;
 import com.ewallet.api.repository.WalletRepository;
@@ -35,6 +36,9 @@ public class AuthenticationServiceTest {
     @Mock
     private WalletRepository walletRepository;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private AuthenticationService authenticationService;
 
@@ -54,5 +58,34 @@ public class AuthenticationServiceTest {
         });
 
         verify(userRepository , never()).save(any());
+    }
+
+
+    @Test
+    void register_ShouldSaveUser_WhenDataIsValid() {
+        UserRegisterRequestDTO dto = new UserRegisterRequestDTO();
+        dto.setEmail("newuser@test.com");
+        dto.setFirstName("Panos");
+        dto.setLastName("Batsos");
+        dto.setPassword("Secret123!");
+        dto.setIdCardNumber("AN123456");
+        dto.setTaxNumber("123456789");
+
+        when(userRepository.existsByEmail("newuser@test.com")).thenReturn(false);
+        when(passwordEncoder.encode("Secret123!")).thenReturn("hashedPassword123");
+        when(userRepository.existsByIdCardNumber("AN123456")).thenReturn(false);
+        when(userRepository.existsByTaxNumber("123456789")).thenReturn(false);
+
+
+        when(jwtService.generateToken(any())).thenReturn("fake-jwt-token");
+
+        RefreshToken dummyRefreshToken = new RefreshToken();
+        dummyRefreshToken.setToken("fake-refresh-token");
+
+        when(refreshTokenService.createRefreshToken(anyString())).thenReturn(dummyRefreshToken);
+
+        authenticationService.register(dto);
+
+        verify(userRepository, times(1)).save(any());
     }
 }
