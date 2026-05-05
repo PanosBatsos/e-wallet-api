@@ -31,11 +31,11 @@ public class UserController {
      * @param dto The validated user registration dto
      * @return A responseEntity containing the ResponseDTO and the HTTP status
      */
-
+    /*
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account and an associated wallet")
     public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRegisterRequestDTO dto) {
         UserResponseDTO response = userService.registerUser(dto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
+    }*/
 }
