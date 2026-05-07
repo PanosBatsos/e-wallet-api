@@ -1,4 +1,4 @@
-package com.ewallet.api.entity;
+package com.ewallet.api.service;
 
 import com.ewallet.api.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
