@@ -5,8 +5,14 @@ import java.time.LocalDateTime;
 
 
 import com.ewallet.api.dto.kafka.TransactionEvent;
+import com.ewallet.api.dto.transaction.TransactionMapper;
 import com.ewallet.api.dto.transaction.TransactionResponseDTO;
 import com.ewallet.api.service.kafka.TransactionProducer;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.ewallet.api.entity.Transaction;
@@ -23,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionProducer transactionProducer;
+    private final TransactionMapper transactionMapper;
 
     @Transactional
     public TransactionResponseDTO recordDeposit(Wallet wallet , BigDecimal amount , String description , String userEmail) {
@@ -133,6 +140,18 @@ public class TransactionService {
                 .type(savedTransaction.getType())
                 .timestamp(savedTransaction.getTimestamp())
                 .build();
+    }
+
+
+    // Retrieves a paginated list of transaction history for a specific user email
+    // Maps the database entities to DTOs for safe data exposure
+    public Page<TransactionResponseDTO> getTransactionHistory(String email , int page , int size) {
+        Pageable pageable = PageRequest.of(page , size , Sort.by("timestamp").descending());
+
+        Page<Transaction> transactionPage = transactionRepository
+                .findAllBySourceWalletUserEmailOrDestinationWalletUserEmail(email , email , pageable);
+
+        return transactionPage.map(transactionMapper::toResponseDTO);
     }
 }
 
