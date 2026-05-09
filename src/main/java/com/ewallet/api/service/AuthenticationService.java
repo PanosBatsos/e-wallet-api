@@ -146,5 +146,12 @@ public class AuthenticationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh Token not found"));
     }
 
-
+    public boolean logout(String email) {
+        try {
+            refreshTokenService.deleteByUserId(email);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

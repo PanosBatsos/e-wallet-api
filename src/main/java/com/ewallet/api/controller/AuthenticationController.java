@@ -11,10 +11,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v0/auth")
@@ -48,7 +48,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequestDTO dto,
+    public ResponseEntity<AuthenticationResponse> refreshToken(@CookieValue(name = "refresh_token") RefreshTokenRequestDTO dto,
                                                                HttpServletResponse response) {
        AuthenticationResponse authenticationResponse = authenticationService.refreshToken(dto);
         cookieUtil.addHttpOnlyCookie(response,
@@ -59,8 +59,20 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        cookieUtil.deleteCookie(response, "refresh_token");
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> logout(HttpServletResponse response, Principal principal) {
+        boolean isLoggedOut = false;
+
+        if (principal != null) {
+            isLoggedOut = authenticationService.logout(principal.getName());
+        }
+
+        cookieUtil.deleteCookie(response , "refresh_token");
+
+        if (isLoggedOut) {
+            return ResponseEntity.ok(Map.of("message", "Logout successful and session cleared"));
+        } else {
+            // If principal = null or service return false
+            return ResponseEntity.ok(Map.of("message", "Cookie cleared, but no active session was found in database"));
+        }
     }
 }
