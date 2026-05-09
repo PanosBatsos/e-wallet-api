@@ -1,7 +1,7 @@
 package com.ewallet.api.controller;
 
-import com.ewallet.api.dto.wallet.WalletTransferRequestDTO;
-import com.ewallet.api.dto.wallet.WalletTransferResponseDTO;
+import com.ewallet.api.dto.wallet.*;
+import com.ewallet.api.entity.Wallet;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
-import com.ewallet.api.dto.wallet.WalletDepositResponseDTO;
 import com.ewallet.api.service.WalletService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +44,14 @@ public class WalletController {
                                                               Principal principal) {
         String userEmail = principal.getName();
         WalletTransferResponseDTO response = walletService.transfer(dto , userEmail);
+        return new ResponseEntity<>(response , HttpStatus.OK);
+    }
+
+    @PostMapping("/withdrawal")
+    public ResponseEntity<WalletWithdrawalResponseDTO> withdrawal(@Valid @RequestBody WalletWithdrawalRequestDTO dto,
+                                                                  Principal principal) {
+        String userEmail = principal.getName();
+        WalletWithdrawalResponseDTO response = walletService.withdrawal(dto , userEmail);
         return new ResponseEntity<>(response , HttpStatus.OK);
     }
 }
