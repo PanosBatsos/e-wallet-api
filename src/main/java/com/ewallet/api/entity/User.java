@@ -91,4 +91,7 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    @Enumerated(EnumType.STRING)
+    private  UserRole userRole = UserRole.USER;
 }
