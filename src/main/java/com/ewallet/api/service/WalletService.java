@@ -6,14 +6,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.ewallet.api.dto.wallet.*;
+import com.ewallet.api.entity.UserRole;
+import com.ewallet.api.entity.WalletStatus;
 import com.ewallet.api.exception.CurrencyMismatchException;
 import com.ewallet.api.exception.ResourceNotFoundException;
 import com.ewallet.api.repository.WalletRepository;
-import com.ewallet.api.service.kafka.TransactionProducer;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.ewallet.api.entity.TransactionType;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
 import com.ewallet.api.repository.UserRepository;
@@ -49,6 +48,10 @@ public class WalletService {
 
         Wallet wallet = walletRepository.findByUserEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
+
+        if (isNotActive(wallet)) {
+            throw new RuntimeException("Wallet not active"); // Custom exception in the future
+        }
 
         // Ensures currency compatibility
         if (!dto.getCurrency().equals(wallet.getCurrency())) {
@@ -96,8 +99,17 @@ public class WalletService {
 
         Wallet senderWallet = walletRepository.findByUserEmail(userEmail).
                 orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
+
+        if (isNotActive(senderWallet)) {
+            throw new RuntimeException("Sender's wallet not active");
+        }
+
         Wallet receiverWallet = walletRepository.findByUserEmail(dto.getReceiverEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("This user does not exist"));
+
+        if (isNotActive(receiverWallet)) {
+            throw new RuntimeException("Receiver's wallet not active");
+        }
 
         BigDecimal senderBalance = senderWallet.getBalance();
         // Check for insufficient balance
@@ -143,6 +155,10 @@ public class WalletService {
         Wallet wallet = walletRepository.findByUserEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
 
+        if (isNotActive(wallet)) {
+            throw new RuntimeException("Wallet not active");
+        }
+
         BigDecimal walletBalance =  wallet.getBalance();
 
         if (walletBalance.compareTo(dto.getAmount()) < 0) {
@@ -166,5 +182,60 @@ public class WalletService {
                 .timestamp(LocalDateTime.now())
                 .currency(wallet.getCurrency())
                 .build();
+    }
+
+    @Transactional
+    public WalletStatusChangeResponseDTO changeWalletStatus(Long walletId , WalletStatus newStatus , String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Requestor not found"));
+
+        if (user.getUserRole() == UserRole.USER) {
+            throw new RuntimeException("Regular users cannot change wallet statuses.");
+        }
+
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
+
+        if (wallet.getWalletStatus() == newStatus) {
+            WalletStatusChangeResponseDTO.builder()
+                    .walletId(walletId)
+                    .newStatus(newStatus)
+                    .message("Wallet is already " + newStatus.name())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+        }
+
+        String resultMessage = switch (newStatus) {
+
+            case ACTIVE -> {
+                wallet.setWalletStatus(WalletStatus.ACTIVE);
+                yield "Wallet successfully activated. Transactions are now permitted.";
+            }
+
+            case FROZEN -> {
+                wallet.setWalletStatus(WalletStatus.FROZEN);
+                yield "Wallet frozen. Transactions are temporarily blocked.";
+            }
+
+            case LOCKED -> {
+                // Only admin can permanently lock a wallet
+                if (user.getUserRole() != UserRole.ADMIN) {
+                    throw new RuntimeException("Only ADMIN can permanently lock wallets.");
+                }
+                wallet.setWalletStatus(WalletStatus.LOCKED);
+                yield "Wallet permanently locked. Contact system administrator.";
+            }
+        };
+
+        return WalletStatusChangeResponseDTO.builder()
+                .message(resultMessage)
+                .newStatus(wallet.getWalletStatus())
+                .walletId(wallet.getId())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    private boolean isNotActive(Wallet wallet) {
+        return wallet.getWalletStatus() != WalletStatus.ACTIVE;
     }
 }

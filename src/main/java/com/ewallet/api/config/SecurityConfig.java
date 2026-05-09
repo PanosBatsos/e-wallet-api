@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(WHITE_LIST_URL).permitAll()
+                        .requestMatchers("/api/v0/admin/**").hasAnyAuthority("ADMIN", "SUPPORT")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

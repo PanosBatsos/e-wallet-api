@@ -93,5 +93,5 @@ public class User implements UserDetails {
     }
 
     @Enumerated(EnumType.STRING)
-    private  UserRole userRole = UserRole.USER;
+    private UserRole userRole = UserRole.USER;
 }
