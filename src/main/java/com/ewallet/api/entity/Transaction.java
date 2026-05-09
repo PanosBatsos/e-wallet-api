@@ -3,17 +3,7 @@ package com.ewallet.api.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +11,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions" , indexes = {
+        @Index(name = "idx_source_wallet_type" , columnList = "source_wallet_id, type"),
+        @Index(name = "idx_dest_wallet_type" , columnList = "destination_Wallet_id, type")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,11 +42,11 @@ public class Transaction {
     private LocalDateTime timestamp;
 
     @ManyToOne
-    @JoinColumn(name = "source_wallet_id")
+    @JoinColumn(name = "source_wallet_id" , nullable = true)
     private Wallet sourceWallet;
 
     @ManyToOne
-    @JoinColumn(name = "destination_wallet_id" , nullable = false)
+    @JoinColumn(name = "destination_wallet_id" , nullable = true)
     private Wallet destinationWallet;
 
     private String description;
