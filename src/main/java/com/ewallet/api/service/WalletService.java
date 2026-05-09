@@ -162,7 +162,7 @@ public class WalletService {
         return  WalletWithdrawalResponseDTO.builder()
                 .amountWithdrawn(dto.getAmount())
                 .newBalance(wallet.getBalance())
-                .message("Withdrawal completed succesfully")
+                .message("Withdrawal completed successfully")
                 .timestamp(LocalDateTime.now())
                 .currency(wallet.getCurrency())
                 .build();
