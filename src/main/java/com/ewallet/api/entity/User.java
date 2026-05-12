@@ -23,7 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,44 +53,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDate birthDate;   
 
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Assign a default role to all users for now
-        // A dedicated role field will be added to the entity later
-        return List.of(new SimpleGrantedAuthority(userRole.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true; // Αν επιστρέψεις false, ο χρήστης δεν θα μπορεί να μπει
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 
     @Enumerated(EnumType.STRING)
     private UserRole userRole = UserRole.USER;
