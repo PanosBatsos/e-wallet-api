@@ -4,14 +4,13 @@ import com.ewallet.api.dto.user.AuthenticationResponse;
 import com.ewallet.api.dto.user.RefreshTokenRequestDTO;
 import com.ewallet.api.dto.user.UserLoginRequestDTO;
 import com.ewallet.api.dto.user.UserRegisterRequestDTO;
-import com.ewallet.api.entity.RefreshToken;
-import com.ewallet.api.entity.User;
-import com.ewallet.api.entity.Wallet;
+import com.ewallet.api.entity.*;
 import com.ewallet.api.exception.ResourceNotFoundException;
 import com.ewallet.api.exception.UserAlreadyExistsException;
 import com.ewallet.api.repository.UserRepository;
 import com.ewallet.api.repository.WalletRepository;
 import com.ewallet.api.security.JwtService;
+import com.ewallet.api.security.UserSecurity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -61,6 +60,7 @@ public class AuthenticationService {
                 .idCardNumber(userRegisterRequestDTO.getIdCardNumber())
                 .taxNumber(userRegisterRequestDTO.getTaxNumber())
                 .birthDate(userRegisterRequestDTO.getBirthDate())
+                .userRole(UserRole.USER)
                 .build();
 
         // Save the user to implement the id
@@ -71,6 +71,7 @@ public class AuthenticationService {
                 .balance(BigDecimal.ZERO)
                 .currency(userRegisterRequestDTO.getCurrency())
                 .user(savedUser)
+                .walletStatus(WalletStatus.ACTIVE)
                 .build();
 
 
@@ -79,7 +80,7 @@ public class AuthenticationService {
 
         walletRepository.save(wallet);
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(new UserSecurity(user));
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
 
@@ -113,7 +114,7 @@ public class AuthenticationService {
         // Delete the previous token
         refreshTokenService.deleteByUserId(user.getEmail());
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(new UserSecurity(user));
 
         // Create a new one
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
@@ -135,7 +136,7 @@ public class AuthenticationService {
 
                     refreshTokenService.deleteByUserId(user.getEmail());
 
-                    String newAccessToken = jwtService.generateToken(user);
+                    String newAccessToken = jwtService.generateToken(new UserSecurity(user));
                     RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
 
                     return AuthenticationResponse.builder()

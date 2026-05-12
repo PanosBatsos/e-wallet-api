@@ -1,6 +1,8 @@
 package com.ewallet.api.config;
 
+import com.ewallet.api.exception.ResourceNotFoundException;
 import com.ewallet.api.repository.UserRepository;
+import com.ewallet.api.security.UserSecurity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,11 +22,13 @@ public class ApplicationConfig {
     private final UserRepository userRepository;
 
 
-    // Fetches user details from the database using the email as the unique identifier
+    // Fetches user details from the database using the email as the unique identifier and
+    // it maps the domain User entity to our UserSecurity wrapper
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .map(UserSecurity::new)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     // Configures the data access object responsible for fetching user details and encoding passwords
