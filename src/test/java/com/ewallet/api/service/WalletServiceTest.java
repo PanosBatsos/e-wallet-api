@@ -2,6 +2,8 @@ package com.ewallet.api.service;
 
 import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
 import com.ewallet.api.dto.wallet.WalletDepositResponseDTO;
+import com.ewallet.api.dto.wallet.WalletTransferRequestDTO;
+import com.ewallet.api.dto.wallet.WalletTransferResponseDTO;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
 import com.ewallet.api.entity.WalletStatus;
@@ -107,6 +109,74 @@ public class WalletServiceTest {
                 eq(email)
         );
     }
+
+    @Test
+    void transfer_ShouldTransferMoneyWithoutProblem() {
+        String senderEmail = "sender@test.com";
+        String receiverEmail = "receiver@test.com";
+
+        // Implement mock sender
+        User sender = User.builder()
+                .email(senderEmail)
+                .build();
+
+        // Implement mock receiver
+        User receiver = User.builder()
+                .email(receiverEmail)
+                .build();
+
+        // Implement sender's mock wallet with 1000 EUR
+        Wallet senderWallet = Wallet.builder()
+                .walletStatus(WalletStatus.ACTIVE)
+                .balance(new BigDecimal("1000.00"))
+                .currency("EUR")
+                .user(sender)
+                .build();
+
+        // Implement receiver's mock wallet
+        Wallet receiverWallet = Wallet.builder()
+                .walletStatus(WalletStatus.ACTIVE)
+                .balance(BigDecimal.ZERO)
+                .currency("EUR")
+                .user(receiver)
+                .build();
+
+        WalletTransferRequestDTO transferRequest = new WalletTransferRequestDTO();
+        transferRequest.setReceiverEmail(receiverEmail);
+        transferRequest.setAmount(new BigDecimal("100.00"));
+        transferRequest.setCurrency("EUR");
+        transferRequest.setDescription("Transfer");
+
+
+        when(walletRepository.findByUserEmail(senderEmail)).thenReturn(Optional.of(senderWallet));
+
+        when(walletRepository.findByUserEmail(receiverEmail)).thenReturn(Optional.of(receiverWallet));
+
+
+        WalletTransferResponseDTO response = walletService.transfer(transferRequest , senderEmail);
+
+        // Check if the balances were updated correctly after the transfer
+        assertEquals(new BigDecimal("900.00") , senderWallet.getBalance());
+        assertEquals(new BigDecimal("100.00") , receiverWallet.getBalance());
+
+        // Check if the response contains correct info
+        // Emails and amount
+        assertEquals(senderEmail , response.getSenderEmail());
+        assertEquals(receiverEmail , response.getReceiverEmail());
+        assertEquals(transferRequest.getAmount() , response.getAmountTransferred());
+
+        // Verify that the transaction was recorded once
+        verify(transactionService, times(1)).recordTransfer(
+                eq(senderWallet),
+                eq(receiverWallet),
+                eq(transferRequest.getAmount()),
+                eq(transferRequest.getDescription()),
+                eq(senderEmail),
+                eq(receiverEmail)
+        );
+    }
+
+
 }
 
 
