@@ -64,7 +64,7 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Assign a default role to all users for now
         // A dedicated role field will be added to the entity later
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority(userRole.name()));
     }
 
     @Override

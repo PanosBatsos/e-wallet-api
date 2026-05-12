@@ -1,11 +1,11 @@
 package com.ewallet.api.service;
 
 import com.ewallet.api.dto.wallet.WalletDepositRequestDTO;
-import com.ewallet.api.dto.wallet.WalletDepositResponseDTO;
-import com.ewallet.api.entity.TransactionType;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.entity.Wallet;
+import com.ewallet.api.entity.WalletStatus;
 import com.ewallet.api.repository.UserRepository;
+import com.ewallet.api.repository.WalletRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,72 +15,51 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.assertArg;
+import static org.mockito.Mockito.when;
 
-/*
 @ExtendWith(MockitoExtension.class)
 public class WalletServiceTest {
     @Mock
-    private UserRepository userRepository;
+    private WalletRepository walletRepository;
 
     @Mock
-    private TransactionService transactionService;
+    private UserRepository userRepository;
 
     @InjectMocks
     private WalletService walletService;
 
-
-    /**
-     * Tests the successful deposit scenario and verifies
-     * that balance is updated correctly and transaction is recorded.
-     */
-    /*  OLD TEST
     @Test
-    void deposit_Success() {
-        // Set up mock data
-        Long userId = 1L;
-        BigDecimal balance = new BigDecimal("100.00");
-        BigDecimal depositAmount = new BigDecimal("30.00");
-        String currency = "EUR";
+    void deposit_ShouldThrowException_WhenWalletIsFrozen() {
+        String email = "user@test.com";
 
+        // Create mock user
+        User user = User.builder()
+                .email(email)
+                .build();
 
-        // Create mock Wallet and User
-        Wallet wallet = new Wallet();
-        wallet.setBalance(balance);
-        wallet.setCurrency(currency);
+        // Create mock wallet
+        Wallet wallet = Wallet.builder()
+                .walletStatus(WalletStatus.FROZEN)
+                .currency("EUR")
+                .user(user)
+                .build();
 
-        User user = new User();
-        user.setId(userId);
+        // Create deposit request
+        WalletDepositRequestDTO dto = WalletDepositRequestDTO.builder()
+                .amount(new BigDecimal("100.00"))
+                .currency("EUR")
+                .description("")
+                .build();
 
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(walletRepository.findByUserEmail(email)).thenReturn(Optional.of(wallet));
 
-        // Create DTO of the request
-        WalletDepositRequestDTO requestDto = new WalletDepositRequestDTO();
-        requestDto.setAmount(depositAmount);
-        requestDto.setCurrency(currency);
-        requestDto.setDescription("Monthly Salary");
-
-        // Tell the mock repository to return the mock user
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        // Execute the service method
-        WalletDepositResponseDTO responseDTO = walletService.deposit(requestDto);
-
-        // Verifies results and behavior
-        assertNotNull(responseDTO);
-        assertEquals(new BigDecimal("130.00") , responseDTO.getNewBalance());
-        assertEquals("Deposit completed" , responseDTO.getMessage());
-
-        // Ensure the transaction was logged via the TransactionService
-        verify(transactionService , times(1)).recordTransaction(
-                eq(wallet),
-                eq(TransactionType.DEPOSIT),
-                eq(depositAmount),
-                anyString()
-        );
+        assertThrows(RuntimeException.class , () -> {
+            walletService.deposit(dto , email);
+        });
     }
 }
-     */
 
 
