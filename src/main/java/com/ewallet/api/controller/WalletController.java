@@ -3,6 +3,7 @@ package com.ewallet.api.controller;
 import com.ewallet.api.dto.transaction.TransactionResponseDTO;
 import com.ewallet.api.dto.wallet.*;
 import com.ewallet.api.entity.Wallet;
+import com.ewallet.api.entity.WalletStatus;
 import com.ewallet.api.service.TransactionService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

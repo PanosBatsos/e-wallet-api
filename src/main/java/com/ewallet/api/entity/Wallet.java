@@ -33,4 +33,8 @@ public class Wallet {
     @OneToOne(optional = false , fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id" , referencedColumnName = "id" , unique = true)
     private User user;
+
+    // Wallet status for security and transaction control
+    @Enumerated(EnumType.STRING)
+    private WalletStatus walletStatus = WalletStatus.ACTIVE;
 }
