@@ -37,4 +37,7 @@ public class Wallet {
     // Wallet status for security and transaction control
     @Enumerated(EnumType.STRING)
     private WalletStatus walletStatus = WalletStatus.ACTIVE;
+
+    @Version
+    private long version;
 }
