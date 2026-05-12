@@ -176,7 +176,55 @@ public class WalletServiceTest {
         );
     }
 
+    @Test
+    void transfer_ShouldThrowException_WhenBalanceIsNotEnough() {
+        String senderEmail = "sender@test.com";
+        String receiverEmail = "receiver@test.com";
 
+        // Implement mock sender
+        User sender = User.builder()
+                .email(senderEmail)
+                .build();
+
+        // Implement mock receiver
+        User receiver = User.builder()
+                .email(receiverEmail)
+                .build();
+
+        // Implement sender's mock wallet with 99 EUR
+        Wallet senderWallet = Wallet.builder()
+                .walletStatus(WalletStatus.ACTIVE)
+                .balance(new BigDecimal("99.00"))
+                .currency("EUR")
+                .user(sender)
+                .build();
+
+        // Implement receiver's mock wallet
+        Wallet receiverWallet = Wallet.builder()
+                .walletStatus(WalletStatus.ACTIVE)
+                .balance(BigDecimal.ZERO)
+                .currency("EUR")
+                .user(receiver)
+                .build();
+
+        WalletTransferRequestDTO transferRequest = new WalletTransferRequestDTO();
+        transferRequest.setReceiverEmail(receiverEmail);
+        transferRequest.setAmount(new BigDecimal("100.00"));
+        transferRequest.setCurrency("EUR");
+        transferRequest.setDescription("Transfer");
+
+
+        when(walletRepository.findByUserEmail(senderEmail)).thenReturn(Optional.of(senderWallet));
+
+        when(walletRepository.findByUserEmail(receiverEmail)).thenReturn(Optional.of(receiverWallet));
+
+        // Because sender tries to send 100 EUR but has only 99
+        assertThrows(RuntimeException.class , () -> {
+            walletService.transfer(transferRequest , senderEmail);
+        });
+
+        verifyNoInteractions(transactionService);
+    }
 }
 
 
