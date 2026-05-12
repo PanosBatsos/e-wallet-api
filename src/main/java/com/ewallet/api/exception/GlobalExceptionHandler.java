@@ -4,6 +4,8 @@ import com.ewallet.api.dto.error.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -62,6 +64,14 @@ public class GlobalExceptionHandler {
         return responseBuilder("An unexpected error occurred" , HttpStatus.INTERNAL_SERVER_ERROR , request);
     }
 
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex,
+                                                                        HttpServletRequest request) {
+        return responseBuilder("Transaction failed because the wallet balance was changed by another action at the same time",
+                HttpStatus.CONFLICT,
+                request);
+    }
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
                                                      HttpServletRequest request) {
@@ -73,4 +83,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(apiError , status);
     }
+
+
+
 }
