@@ -38,13 +38,13 @@ public class TransactionConsumer {
 
 
         // Mark as processed
-        processedEventRepository.save(new ProcessedEvent(eventId, LocalDateTime.now()));
+        processedEventRepository.save(new ProcessedEvent(eventId , LocalDateTime.now()));
     }
 
     // This method listens only the failed transactions
-    @KafkaListener(topics = "wallet-transactions.DLT", groupId = "ewallet-dlt-group")
+    @KafkaListener(topics = "wallet-transactions.DLT" , groupId = "ewallet-dlt-group")
     public void handleDlt(TransactionEvent event) {
-        log.error("CRITICAL: Event moved to DLT! Transaction ID: {}", event.getTransactionId());
+        log.error("CRITICAL: Event moved to DLT! Transaction ID: {}" , event.getTransactionId());
 
     }
 

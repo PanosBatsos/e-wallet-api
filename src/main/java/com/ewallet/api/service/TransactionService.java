@@ -7,28 +7,30 @@ import java.time.LocalDateTime;
 import com.ewallet.api.dto.kafka.TransactionEvent;
 import com.ewallet.api.dto.transaction.TransactionMapper;
 import com.ewallet.api.dto.transaction.TransactionResponseDTO;
-import com.ewallet.api.service.kafka.TransactionProducer;
+import com.ewallet.api.entity.*;
+import com.ewallet.api.repository.OutboxEventRepository;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.ewallet.api.entity.Transaction;
-import com.ewallet.api.entity.TransactionStatus;
-import com.ewallet.api.entity.TransactionType;
-import com.ewallet.api.entity.Wallet;
 import com.ewallet.api.repository.TransactionRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import static org.apache.kafka.common.requests.DeleteAclsResponse.log;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
     private final TransactionRepository transactionRepository;
-    private final TransactionProducer transactionProducer;
+    private final ObjectMapper objectMapper;
+    private final OutboxEventRepository outboxEventRepository;
     private final TransactionMapper transactionMapper;
 
     @Transactional
@@ -153,7 +155,25 @@ public class TransactionService {
                 .amount(transaction.getAmount())
                 .build();
 
-        transactionProducer.sendTransactionEvent(event);
+        try {
+            // From Event to JSON string
+            String jsonPayload = objectMapper.writeValueAsString(event);
+
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateType("TRANSACTION")
+                    .aggregateId(String.valueOf(transaction.getId()))
+                    .payload(jsonPayload)
+                    .createdAt(LocalDateTime.now())
+                    .processed(false)
+                    .build();
+
+            // Save to database
+            outboxEventRepository.save(outboxEvent);
+            log.info("Saved event to Outbox for Transaction ID: {}" , transaction.getId());
+        } catch (Exception e) {
+            log.error("Failed to serialize Outbox Event for transaction {}" , transaction.getId() , e);
+            throw new RuntimeException("Failed to process transaction event" , e);
+        }
     }
 }
 
