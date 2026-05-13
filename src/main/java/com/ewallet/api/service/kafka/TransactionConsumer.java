@@ -1,7 +1,8 @@
-package com.ewallet.api.repository;
+package com.ewallet.api.service.kafka;
 
 import com.ewallet.api.dto.kafka.TransactionEvent;
 import com.ewallet.api.entity.ProcessedEvent;
+import com.ewallet.api.repository.ProcessedEventRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
