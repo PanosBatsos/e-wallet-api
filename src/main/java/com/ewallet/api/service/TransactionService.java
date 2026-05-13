@@ -44,18 +44,7 @@ public class TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        TransactionEvent transactionEvent = TransactionEvent.builder()
-                .transactionId(savedTransaction.getId())
-                .sourceWalletId(null)
-                .destinationWalletId(wallet.getId())
-                .type(TransactionType.DEPOSIT.toString())
-                .amount(amount)
-                .currency(wallet.getCurrency())
-                .description(description)
-                .timestamp(savedTransaction.getTimestamp())
-                .build();
-
-        transactionProducer.sendTransactionEvent(transactionEvent);
+        sendAsyncEvent(savedTransaction);
 
         return TransactionResponseDTO.builder()
                 .transactionId(savedTransaction.getId())
@@ -81,18 +70,7 @@ public class TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        TransactionEvent transactionEvent = TransactionEvent.builder()
-                .transactionId(savedTransaction.getId())
-                .sourceWalletId(sourceWallet.getId())
-                .destinationWalletId(destinationWallet.getId())
-                .type(TransactionType.TRANSFER.toString())
-                .amount(amount)
-                .currency(destinationWallet.getCurrency())
-                .description(description)
-                .timestamp(savedTransaction.getTimestamp())
-                .build();
-
-        transactionProducer.sendTransactionEvent(transactionEvent);
+        sendAsyncEvent(savedTransaction);
 
         return TransactionResponseDTO.builder()
                 .transactionId(savedTransaction.getId())
@@ -118,18 +96,7 @@ public class TransactionService {
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        TransactionEvent transactionEvent = TransactionEvent.builder()
-                .transactionId(savedTransaction.getId())
-                .sourceWalletId(wallet.getId())
-                .destinationWalletId(null)
-                .type(TransactionType.WITHDRAWAL.toString())
-                .amount(amount)
-                .currency(wallet.getCurrency())
-                .description(description)
-                .timestamp(savedTransaction.getTimestamp())
-                .build();
-
-        transactionProducer.sendTransactionEvent(transactionEvent);
+        sendAsyncEvent(savedTransaction);
 
         return TransactionResponseDTO.builder()
                 .transactionId(savedTransaction.getId())
@@ -152,6 +119,41 @@ public class TransactionService {
                 .findAllBySourceWalletUserEmailOrDestinationWalletUserEmail(email , email , pageable);
 
         return transactionPage.map(transactionMapper::toResponseDTO);
+    }
+
+
+    private void sendAsyncEvent(Transaction transaction) {
+        Long sourceId = null;
+        if (transaction.getSourceWallet() != null) {
+            sourceId = transaction.getSourceWallet().getId();
+        }
+
+
+        Long destinationId = null;
+        if (transaction.getDestinationWallet() != null) {
+            destinationId = transaction.getDestinationWallet().getId();
+        }
+
+
+        String eventCurrency = "";
+        if (transaction.getDestinationWallet() != null) {
+            eventCurrency = transaction.getDestinationWallet().getCurrency();
+        } else if (transaction.getSourceWallet() != null){
+            eventCurrency = transaction.getSourceWallet().getCurrency();
+        }
+
+        TransactionEvent event = TransactionEvent.builder()
+                .transactionId(transaction.getId())
+                .sourceWalletId(sourceId)
+                .destinationWalletId(destinationId)
+                .timestamp(transaction.getTimestamp())
+                .type(transaction.getType().name())
+                .currency(eventCurrency)
+                .description(transaction.getDescription())
+                .amount(transaction.getAmount())
+                .build();
+
+        transactionProducer.sendTransactionEvent(event);
     }
 }
 
