@@ -17,7 +17,6 @@ public class TokenCleanupService {
     private static final int BATCH_SIZE = 1000;
 
     @Scheduled(cron = "0 0 3 * * *")
-    @Transactional
     public void cleanExpiredTokens() {
         log.info("Cleanup of expired refresh tokens begins");
 
