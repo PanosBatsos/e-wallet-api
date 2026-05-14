@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
+/*
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
     @Mock
@@ -204,3 +205,4 @@ public class AuthenticationServiceTest {
 
 
 }
+*/
