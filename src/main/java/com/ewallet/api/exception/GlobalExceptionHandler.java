@@ -91,6 +91,11 @@ public class GlobalExceptionHandler {
         return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
     }
 
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<ApiError> handleUnauthorizedActions(UnauthorizedActionException ex,
+                                                              HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.UNAUTHORIZED , request);
+    }
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
                                                      HttpServletRequest request) {
