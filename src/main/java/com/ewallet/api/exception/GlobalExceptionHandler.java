@@ -72,6 +72,15 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 request);
     }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ApiError> handleInsufficientFunds(InsufficientFundsException ex,
+                                                            HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.BAD_REQUEST , request);
+    }
+
+
+
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
                                                      HttpServletRequest request) {
