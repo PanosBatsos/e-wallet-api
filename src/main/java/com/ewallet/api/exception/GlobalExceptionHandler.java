@@ -5,10 +5,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.web.ErrorResponse;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -95,6 +96,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUnauthorizedActions(UnauthorizedActionException ex,
                                                               HttpServletRequest request) {
         return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex,
+                                                       HttpServletRequest request) {
+        return responseBuilder("Access Denied: You do not have the required permissions for this action",
+                HttpStatus.FORBIDDEN,
+                request);
     }
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
