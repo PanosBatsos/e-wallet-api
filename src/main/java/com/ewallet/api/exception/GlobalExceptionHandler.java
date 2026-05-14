@@ -85,6 +85,11 @@ public class GlobalExceptionHandler {
         return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
     }
 
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ApiError> handleRefreshToken(TokenRefreshException ex,
+                                                       HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+    }
 
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
