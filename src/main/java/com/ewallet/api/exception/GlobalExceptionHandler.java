@@ -88,13 +88,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TokenRefreshException.class)
     public ResponseEntity<ApiError> handleRefreshToken(TokenRefreshException ex,
                                                        HttpServletRequest request) {
-        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+        return responseBuilder(ex.getMessage() , HttpStatus.UNAUTHORIZED , request);
     }
 
     @ExceptionHandler(UnauthorizedActionException.class)
     public ResponseEntity<ApiError> handleUnauthorizedActions(UnauthorizedActionException ex,
                                                               HttpServletRequest request) {
-        return responseBuilder(ex.getMessage() , HttpStatus.UNAUTHORIZED , request);
+        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
     }
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
@@ -107,7 +107,5 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(apiError , status);
     }
-
-
 
 }
