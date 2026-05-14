@@ -48,14 +48,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthenticationResponse> refreshToken(@CookieValue(name = "refresh_token") RefreshTokenRequestDTO dto,
+    public ResponseEntity<AuthenticationResponse> refreshToken(@CookieValue(name = "refresh_token") String refreshToken,
                                                                HttpServletResponse response) {
-       AuthenticationResponse authenticationResponse = authenticationService.refreshToken(dto);
+        RefreshTokenRequestDTO dto = new RefreshTokenRequestDTO(refreshToken);
+        AuthenticationResponse authenticationResponse = authenticationService.refreshToken(dto);
         cookieUtil.addHttpOnlyCookie(response,
                 "refresh_token",
                 authenticationResponse.getRefreshToken(),
                 REFRESH_TOKEN_DURATION);
-       return new ResponseEntity<>(authenticationResponse , HttpStatus.OK);
+        return new ResponseEntity<>(authenticationResponse , HttpStatus.OK);
     }
 
     @PostMapping("/logout")

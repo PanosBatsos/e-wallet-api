@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -103,6 +104,14 @@ public class GlobalExceptionHandler {
                                                        HttpServletRequest request) {
         return responseBuilder("Access Denied: You do not have the required permissions for this action",
                 HttpStatus.FORBIDDEN,
+                request);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ApiError> handleMissingCookie(MissingRequestCookieException ex,
+                                                        HttpServletRequest request) {
+        return responseBuilder("Authentication session expired or missing. Try to log in",
+                HttpStatus.UNAUTHORIZED,
                 request);
     }
     // Helper method to build a response entity containing an ApiError.
