@@ -79,6 +79,11 @@ public class GlobalExceptionHandler {
         return responseBuilder(ex.getMessage() , HttpStatus.BAD_REQUEST , request);
     }
 
+    @ExceptionHandler(WalletInactiveException.class)
+    public ResponseEntity<ApiError> handleInactiveWallet(WalletInactiveException ex,
+                                                         HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+    }
 
 
     // Helper method to build a response entity containing an ApiError.
