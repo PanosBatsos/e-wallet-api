@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
 import com.ewallet.api.dto.wallet.*;
 import com.ewallet.api.entity.UserRole;
 import com.ewallet.api.entity.WalletStatus;
-import com.ewallet.api.exception.CurrencyMismatchException;
-import com.ewallet.api.exception.ResourceNotFoundException;
+import com.ewallet.api.exception.*;
 import com.ewallet.api.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +49,7 @@ public class WalletService {
                 .orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
 
         if (isNotActive(wallet)) {
-            throw new RuntimeException("Wallet not active"); // Custom exception in the future
+            throw new WalletInactiveException("Wallet not active");
         }
 
         // Ensures currency compatibility
@@ -101,21 +100,20 @@ public class WalletService {
                 orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
 
         if (isNotActive(senderWallet)) {
-            throw new RuntimeException("Sender's wallet not active");
+            throw new WalletInactiveException("Sender's wallet not active");
         }
 
         Wallet receiverWallet = walletRepository.findByUserEmail(dto.getReceiverEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("This user does not exist"));
 
         if (isNotActive(receiverWallet)) {
-            throw new RuntimeException("Receiver's wallet not active");
+            throw new WalletInactiveException("Receiver's wallet not active");
         }
 
         BigDecimal senderBalance = senderWallet.getBalance();
         // Check for insufficient balance
         if (senderBalance.compareTo(dto.getAmount()) < 0) {
-            // InsufficientBalanceException will be added in the future
-            throw new RuntimeException("Insufficient funds for this transfer");
+            throw new InsufficientFundsException("Insufficient funds for this transfer");
         }
 
 
@@ -156,14 +154,14 @@ public class WalletService {
                 .orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
 
         if (isNotActive(wallet)) {
-            throw new RuntimeException("Wallet not active");
+            throw new WalletInactiveException("Wallet not active");
         }
 
         BigDecimal walletBalance =  wallet.getBalance();
 
         if (walletBalance.compareTo(dto.getAmount()) < 0) {
             // InsufficientBalanceException will be added in the future
-            throw new RuntimeException("Insufficient funds for this transfer");
+            throw new InsufficientFundsException("Insufficient funds for this transfer");
         }
 
         wallet.setBalance(wallet.getBalance().subtract(dto.getAmount()));
@@ -190,7 +188,7 @@ public class WalletService {
                 .orElseThrow(() -> new ResourceNotFoundException("Requestor not found"));
 
         if (user.getUserRole() == UserRole.USER) {
-            throw new RuntimeException("Regular users cannot change wallet statuses.");
+            throw new UnauthorizedActionException("Regular users cannot change wallet statuses.");
         }
 
         Wallet wallet = walletRepository.findById(walletId)
@@ -220,7 +218,7 @@ public class WalletService {
             case LOCKED -> {
                 // Only admin can permanently lock a wallet
                 if (user.getUserRole() != UserRole.ADMIN) {
-                    throw new RuntimeException("Only ADMIN can permanently lock wallets.");
+                    throw new UnauthorizedActionException("Only ADMIN can permanently lock wallets.");
                 }
                 wallet.setWalletStatus(WalletStatus.LOCKED);
                 yield "Wallet permanently locked. Contact system administrator.";

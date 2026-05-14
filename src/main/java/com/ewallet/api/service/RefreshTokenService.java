@@ -3,6 +3,7 @@ package com.ewallet.api.service;
 import com.ewallet.api.entity.RefreshToken;
 import com.ewallet.api.entity.User;
 import com.ewallet.api.exception.ResourceNotFoundException;
+import com.ewallet.api.exception.TokenRefreshException;
 import com.ewallet.api.repository.RefreshTokenRepository;
 import com.ewallet.api.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -46,7 +47,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken refreshToken) {
         if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(refreshToken);
-            throw new RuntimeException("Refresh Token expired.");
+            throw new TokenRefreshException("Refresh Token expired.");
         }
         return refreshToken;
     }

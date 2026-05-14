@@ -5,10 +5,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.web.ErrorResponse;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -72,6 +74,46 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 request);
     }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ApiError> handleInsufficientFunds(InsufficientFundsException ex,
+                                                            HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.BAD_REQUEST , request);
+    }
+
+    @ExceptionHandler(WalletInactiveException.class)
+    public ResponseEntity<ApiError> handleInactiveWallet(WalletInactiveException ex,
+                                                         HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+    }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ApiError> handleRefreshToken(TokenRefreshException ex,
+                                                       HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.UNAUTHORIZED , request);
+    }
+
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<ApiError> handleUnauthorizedActions(UnauthorizedActionException ex,
+                                                              HttpServletRequest request) {
+        return responseBuilder(ex.getMessage() , HttpStatus.FORBIDDEN , request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex,
+                                                       HttpServletRequest request) {
+        return responseBuilder("Access Denied: You do not have the required permissions for this action",
+                HttpStatus.FORBIDDEN,
+                request);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ApiError> handleMissingCookie(MissingRequestCookieException ex,
+                                                        HttpServletRequest request) {
+        return responseBuilder("Authentication session expired or missing. Try to log in",
+                HttpStatus.UNAUTHORIZED,
+                request);
+    }
     // Helper method to build a response entity containing an ApiError.
     private ResponseEntity<ApiError> responseBuilder(String message , HttpStatus status ,
                                                      HttpServletRequest request) {
@@ -83,7 +125,5 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(apiError , status);
     }
-
-
 
 }
