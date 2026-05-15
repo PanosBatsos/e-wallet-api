@@ -27,17 +27,15 @@ public class TransactionConsumer {
     public void consume(TransactionEvent event) {
         log.info("Received transaction event: {}" , event.getTransactionId());
 
-        // This is used as idempotency key
         String eventId = String.valueOf(event.getTransactionId());
 
-        // If this id exists in the table the work is already done
         if (processedEventRepository.existsById(eventId)) {
             log.warn("Duplicate event detected: {}" , eventId);
             return;
         }
 
+        processTransactionEventBusinessLogic(event);
 
-        // Mark as processed
         processedEventRepository.save(new ProcessedEvent(eventId , LocalDateTime.now()));
     }
 
