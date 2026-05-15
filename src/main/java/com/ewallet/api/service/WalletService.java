@@ -10,6 +10,7 @@ import com.ewallet.api.entity.UserRole;
 import com.ewallet.api.entity.WalletStatus;
 import com.ewallet.api.exception.*;
 import com.ewallet.api.repository.WalletRepository;
+import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Service;
 
 import com.ewallet.api.entity.User;
@@ -97,6 +98,10 @@ public class WalletService {
 
     @Transactional
     public WalletTransferResponseDTO transfer(WalletTransferRequestDTO dto , String userEmail) {
+
+        if (dto.getReceiverEmail().equals(userEmail)) {
+            throw new ValidationException("Receiver's email cannot be the same with sender's");
+        }
 
         Wallet senderWallet = walletRepository.findByUserEmail(userEmail).
                 orElseThrow(() -> new ResourceNotFoundException("This wallet does not exist"));
