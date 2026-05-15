@@ -7,8 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
 
 import java.util.List;
 
@@ -28,7 +31,8 @@ public class OutboxScheduler {
     @Scheduled(fixedDelay = 5000)
     @Transactional
     public void processOutboxEvents() {
-        List<OutboxEvent> pendingEvents = outboxEventRepository.findOutboxEventByProcessedFalseOrderByCreatedAtAsc();
+        Pageable limit = PageRequest.of(0 , 100);
+        List<OutboxEvent> pendingEvents = outboxEventRepository.findOutboxEventByProcessedFalseOrderByCreatedAtAsc(limit);
 
         if (pendingEvents.isEmpty()) {
             return; // Nothing to process
