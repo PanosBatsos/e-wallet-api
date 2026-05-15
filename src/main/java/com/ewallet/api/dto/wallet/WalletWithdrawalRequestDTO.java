@@ -12,7 +12,7 @@ public class WalletWithdrawalRequestDTO {
     // The amount of money to be transferred
     @NotNull(message = "Amount is required")
     @Positive(message = "The amount must be positive")
-    @Min(value = 1 , message = "The minimum amount is 1")
+    @DecimalMin(value = "0.01" , message = "The minimum amount is 0.01")
     private BigDecimal amount;
 
     @NotNull(message = "ISO currency is required")
