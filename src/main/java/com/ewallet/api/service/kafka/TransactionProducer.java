@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -22,11 +26,12 @@ public class TransactionProducer {
      * @param event The details of the transaction to be sent
      */
     public void sendTransactionEvent(TransactionEvent event) {
-        log.info("Sending event to Kafka: {}" , event);
-
-        // Pushes the message to the specified topic
-        // It's a non-blocking operation
-        // Spring will auto-form the event to JSON
-        this.kafkaTemplate.send(TOPIC , event);
+        try {
+            // Waits maximum 5 seconds to receive response for kafka
+            kafkaTemplate.send(TOPIC , event).get(5 , TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Cannot send the event to Kafka: " + event.getTransactionId() , e);
+        }
     }
 }

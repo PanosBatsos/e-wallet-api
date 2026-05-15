@@ -1,11 +1,13 @@
 package com.ewallet.api.dto.wallet;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
+@AllArgsConstructor
 public class WalletTransferRequestDTO {
 
     @NotBlank(message = "Receiver email is required")
@@ -15,7 +17,7 @@ public class WalletTransferRequestDTO {
     // The amount of money to be transferred
     @NotNull(message = "Amount is required")
     @Positive(message = "The amount must be positive")
-    @Min(value = 1 , message = "The minimum amount is 1")
+    @DecimalMin(value = "0.01" , message = "The minimum amount is 0.01")
     private BigDecimal amount;
 
     @NotNull(message = "ISO currency is required")
