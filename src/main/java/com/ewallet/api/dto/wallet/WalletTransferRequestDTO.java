@@ -1,11 +1,13 @@
 package com.ewallet.api.dto.wallet;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
+@AllArgsConstructor
 public class WalletTransferRequestDTO {
 
     @NotBlank(message = "Receiver email is required")

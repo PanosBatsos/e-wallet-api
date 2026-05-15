@@ -57,8 +57,8 @@ public class WalletService {
             throw new CurrencyMismatchException("Mismatch in currency");
         }
 
-        // Update the balance
-        wallet.setBalance(wallet.getBalance().add(dto.getAmount()));
+        executeCredit(wallet.getId() , dto.getAmount());
+
 
 
         // Record the transaction for the audit trail.
@@ -70,12 +70,14 @@ public class WalletService {
                 userEmail
         );
 
+        Wallet updatedWallet = walletRepository.findById(wallet.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
         return WalletDepositResponseDTO.builder()
             .amountDeposited(dto.getAmount())
             .currency(dto.getCurrency())
             .message("Deposit completed")
-            .newBalance(wallet.getBalance())
+            .newBalance(updatedWallet.getBalance())
             .timestamp(LocalDateTime.now())
             .build();
     }
@@ -110,22 +112,24 @@ public class WalletService {
             throw new WalletInactiveException("Receiver's wallet not active");
         }
 
-        BigDecimal senderBalance = senderWallet.getBalance();
-        // Check for insufficient balance
-        if (senderBalance.compareTo(dto.getAmount()) < 0) {
-            throw new InsufficientFundsException("Insufficient funds for this transfer");
-        }
-
-
 
         // Check for currency mismatch
         if (!senderWallet.getCurrency().equals(receiverWallet.getCurrency())) {
             throw new CurrencyMismatchException("Cannot transfer between different currencies");
         }
 
-        // Sync for now
-        senderWallet.setBalance(senderWallet.getBalance().subtract(dto.getAmount()));
-        receiverWallet.setBalance(receiverWallet.getBalance().add(dto.getAmount()));
+        Long senderId = senderWallet.getId();
+        Long receiverId = receiverWallet.getId();
+        BigDecimal amount = dto.getAmount();
+
+        if (senderId < receiverId) {
+            executeDebit(senderId, amount);
+            executeCredit(receiverId, amount);
+        } else {
+            executeCredit(receiverId, amount);
+            executeDebit(senderId, amount);
+        }
+
 
 
         transactionService.recordTransfer(
@@ -164,7 +168,7 @@ public class WalletService {
             throw new InsufficientFundsException("Insufficient funds for this transfer");
         }
 
-        wallet.setBalance(wallet.getBalance().subtract(dto.getAmount()));
+        executeDebit(wallet.getId() , dto.getAmount());
 
         transactionService.recordWithdrawal(
                 wallet,
@@ -173,9 +177,12 @@ public class WalletService {
                 userEmail
         );
 
+        Wallet updatedWallet = walletRepository.findById(wallet.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
+
         return  WalletWithdrawalResponseDTO.builder()
                 .amountWithdrawn(dto.getAmount())
-                .newBalance(wallet.getBalance())
+                .newBalance(updatedWallet.getBalance())
                 .message("Withdrawal completed successfully")
                 .timestamp(LocalDateTime.now())
                 .currency(wallet.getCurrency())
@@ -235,5 +242,17 @@ public class WalletService {
 
     private boolean isNotActive(Wallet wallet) {
         return wallet.getWalletStatus() != WalletStatus.ACTIVE;
+    }
+
+    private void executeDebit(Long walletId , BigDecimal amount) {
+        int updatedRows = walletRepository.debitWallet(walletId , amount);
+        // if updatedRows == 0 then balance <= amount
+        if (updatedRows == 0) {
+            throw new InsufficientFundsException("Insufficient funds for this transfer or concurrent modification.");
+        }
+    }
+
+    private void executeCredit(Long walletId , BigDecimal amount) {
+        walletRepository.creditWallet(walletId , amount);
     }
 }
